@@ -1,0 +1,53 @@
+# runelixir.com examples
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.14.0"}
+])
+```
+
+## Section
+
+```elixir
+name = "peter"
+age = "32"
+IO.inspect([name, age])
+IO.inspect("hello my name is #{name} and i am #{age} years old")
+```
+
+## Section
+
+```elixir
+form =
+  Kino.Control.form(
+    [
+      name: Kino.Input.text("Name")
+    ],
+    submit: "Submit"
+  )
+
+Kino.listen(form, fn event ->
+  IO.inspect(event)
+end)
+
+form
+```
+
+```elixir
+details = ["peter", 332, 32.2, true, :active]
+  Enum.at(details, 4)
+
+# IO.put_chars(List.replace_at(details, 1, 334))
+
+details = [:adult | details]
+
+details ++ [nil, 123]
+```
+
+```elixir
+# tuples
+
+hobbies = {"sports", "coffee", "writing"}
+
+elem(hobbies, 1)
+```
