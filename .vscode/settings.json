@@ -1,0 +1,4 @@
+{
+    "code-livebook.livebookExecutablePath": "$HOME/.nix-profile/bin/livebook",
+    "code-livebook.livebookHost": "http://localhost"
+}
