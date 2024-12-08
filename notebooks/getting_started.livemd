@@ -431,3 +431,216 @@ end
 fun.(%{name: "Peter"}) # => "That's me!"
 fun.(%{name: "Bob"}) # => "That's not me."
 ```
+
+```elixir
+name = :peter
+
+fun = fn
+  ^name -> "That's me!"
+  _name -> "That's not me."
+end
+
+IO.puts fun.(:peter) # Output: That's me!
+IO.puts fun.(:john)  # Output: That's not me.
+
+```
+
+```elixir
+name = "Peter"
+
+fun = fn
+  [^name] -> "That's me!"
+  [_name] -> "That's not me."
+end
+
+IO.puts fun.(["Peter"]) # Output: That's me!
+IO.puts fun.(["John"])  # Output: That's not me.
+
+```
+
+```elixir
+name = "Peter"
+
+fun = fn
+  {^name} -> "That's me!"
+  {_name} -> "That's not me."
+end
+
+IO.puts fun.({"Peter"}) # Output: That's me!
+IO.puts fun.({"John"})  # Output: That's not me.
+
+```
+
+## control flow
+
+Elixir offers four control structures: `if/unless`, `case`, `cond`, and `with`
+
+```elixir
+age = 17
+
+result = 
+  if age >= 18 do
+    :adult
+  else
+    :minor
+  end
+IO.inspect(result, label: 1)
+
+unless age >= 18 do
+  raise "a minor"
+end
+```
+
+The case statement is similar to switch in other languages. It allows you to state multiple clauses and tries to match your conditional against each clause.
+
+```elixir
+active_status = :active
+
+fun = 
+  fn value ->
+    case value do
+      %{status: ^active_status} -> :active
+      %{status: _other_status} -> :inactive
+
+      %{age: nil} -> :age_missing
+      %{age: age} when is_integer(age) and age >= 18 -> :adult
+      %{age: age} when is_integer(age) -> :minor
+
+      #optional fallback
+      _ -> :default
+    end
+  end
+```
+
+```elixir
+fun.(%{status: :active}) # => :active
+fun.(%{status: :foobar}) # => :inactive
+
+fun.(%{age: nil}) # => :age_missing
+fun.(%{age: 18}) # => :adult
+fun.(%{age: 17}) # => :minor
+
+fun.(nil) # => :default
+```
+
+```elixir
+adult? fn age -> age >= 18 end
+
+fun =
+  fn value ->
+    cond do
+      value == :active -> :active
+      is_integer(value) && adult?.(value) -> :adult
+      is_integer(value) -> :minor
+      true -> :default
+    end
+  end
+```
+
+```elixir
+adult? = fn age -> age >= 18 end
+details = %{name: "Peter", age: 32}
+
+# Instead of writing nested if- or case-statements like this:
+check_access = fn details ->
+  case details do
+    %{age: age} ->
+      if adult?.(age) do
+        :ok
+      else
+        {:error, :not_adult}
+      end
+
+    _ ->
+      {:error, :age_missing}
+  end
+end
+
+# Rather use one with-statement like this:
+check_access_refactored = fn details ->
+  with %{age: age} <- details,
+       true <- adult?.(age) do
+    :ok
+  else
+    # Gets executed if any of the matches above fails.
+    %{} -> {:error, :age_missing}
+    false -> {:error, :not_adult}
+  end
+end
+```
+
+```elixir
+defmodule RunElixir.Permissions do
+  def check_access(details) do
+    with {:ok, age} <- get_age(details),
+         :ok <- check_adult(age) do
+      :ok
+    end
+  end
+
+  # Moving each step into a small helper function gives you the flexibility
+  # to decide which error to return inside the function.
+  defp get_age(details) do
+    case details do
+      %{age: age} when is_integer(age) -> {:ok, age}
+      %{age: _age} -> {:error, :age_invalid}
+      _ -> {:error, :age_missing}
+    end
+  end
+
+  defp check_adult(age) do
+    if age >= 18, do: :ok, else: {:error, :not_adult}
+  end
+end
+
+RunElixir.Permissions.check_access(%{age: 32}) # => :ok
+RunElixir.Permissions.check_access(%{age: nil}) # => {:error, :age_invalid}
+RunElixir.Permissions.check_access(%{name: "Peter"}) # => {:error, :age_missing}
+RunElixir.Permissions.check_access(%{age: 17}) # => {:error, :not_adult}
+```
+
+## Loops
+
+```elixir
+result = for idx <- 1..10//1, do: idx
+IO.inspect(result, label: "range-asc")
+
+result = for idx <- 10..1//-3, do: idx
+IO.inspect(result, label: "range-dec")
+
+my_list = ["Peter", 32, 190.47, :active]
+result = for el <- my_list, do: el
+IO.inspect(result, label: "elements")
+
+# nested
+result = for x <- [1, 2, 6], y <- [4, 5, 7], do: [x: x, y: y]
+IO.inspect(result, label: "nested")
+```
+
+```elixir
+# Enum helpers
+
+Enum.map([1, 2, 3], fn x -> x * 2 end) # return result
+Enum.each([1, 2, 3], fn x -> x * 2 end) # don't return result
+
+Enum.reduce([1, 2, 3], 1, fn x, acc -> acc + x end)
+
+Enum.filter([1, 2, 3, 2, 4], fn x -> x === 2 end)
+
+Enum.reject([1, 2, 3], fn x -> x == 2 end)
+```
+
+```elixir
+# recursive functions
+
+defmodule RunElixir.Loop do
+  def loop(collection, fun), do: do_loop(collection, [], fun)
+
+  # Applies an anonymous function to each element and returns the result as list.
+  defp do_loop([], result, _fun), do: Enum.reverse(result)
+  defp do_loop([value | rest], result, fun), do: do_loop(rest, [fun.(value) | result], fun)
+end
+
+RunElixir.Loop.loop([1, 2, 3], &(&1 * 2))
+# => [2, 4, 6]
+```
