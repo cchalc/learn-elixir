@@ -637,7 +637,12 @@ defmodule RunElixir.Loop do
   def loop(collection, fun), do: do_loop(collection, [], fun)
 
   # Applies an anonymous function to each element and returns the result as list.
-  defp do_loop([], result, _fun), do: Enum.reverse(result)
+  defp do_loop([], result, _fun), do: Enum.reverse(result) #base 
+
+# The reason we reverse the list is that we are prepending elements to the accumulator
+# result in the next clause. Prepending is efficient in Elixir, but it results in the
+# order being reversed. So, we reverse it at the end to maintain the original order.
+  
   defp do_loop([value | rest], result, fun), do: do_loop(rest, [fun.(value) | result], fun)
 end
 
