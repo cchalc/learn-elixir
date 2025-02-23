@@ -1,7 +1,28 @@
 defmodule KitchenCalculator do
-  def get_volume(volume_pair) do
-    # Please implement the get_volume/1 function
-  end
+  @moduledoc """
+  Functions for converting between different kitchen units of measurement.
+  """
+
+  @conversion_factors %{
+    :cup => 240,
+    :fluid_ounce => 30,
+    :teaspoon => 5,
+    :tablespoon => 15,
+    :milliliter => 1
+  }
+
+  @doc """
+  Extracts the numeric volume from a volume-pair tuple.
+
+  ## Examples
+
+      iex> KitchenCalculator.get_volume({:cup, 2.5})
+      2.5
+
+      iex> KitchenCalculator.get_volume({:teaspoon, 3})
+      3
+  """
+  def get_volume({_unit, volume}), do: volume
 
   def to_milliliter(volume_pair) do
     # Please implement the to_milliliter/1 functions
